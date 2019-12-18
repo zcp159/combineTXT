@@ -4,8 +4,6 @@ import fnmatch
 import time
 import configparser
 
-chongfu_count = 0
-
 
 # 导入章节,返回选项内容列表
 def xuanxiang_read(cf, zhangjie):
@@ -21,10 +19,12 @@ def conf_read():
     list = []
     cf = configparser.ConfigParser(allow_no_value=False)
     cf.read("conf.ini")
-    if cf.has_section('TXT文件夹路径') and cf.has_section('需要的关键字') and cf.has_section('屏蔽的关键字'):
+    if cf.has_section('TXT文件夹路径') and cf.has_section('需要的关键字') and cf.has_section('文件大小限制,单位KB'):
         # 遍历章节
         for i in cf.sections():
             list.append(xuanxiang_read(cf, i))
+    else:
+        exit()
     return list
 
 
@@ -104,56 +104,67 @@ def is_special_file(root, guizes=["*"], liwaimulus=[]):
     for dangqianmulu, mulus, files in os.walk(os.path.abspath(root)):
         # 遍历返回的文件名
         for file in files:
-            # 判定文件名是否满足需要搜索的格式,如果符合则绝对路径放入生成器
-            if is_file_math(file, guizes):
-                yield os.path.join(os.path.abspath(dangqianmulu), file)
+            # 判定大小是否负责规则
+            if size_xiaoyu(os.path.join(os.path.abspath(dangqianmulu), file)):
+                # 判定文件名是否满足需要搜索的格式,如果符合则绝对路径放入生成器
+                if is_file_math(file, guizes):
+                    yield os.path.join(os.path.abspath(dangqianmulu), file)
+                else:
+                    print("关键字不符:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+            else:
+                print("大小不合规:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+        # 排除指定目录名的目录
         for d in liwaimulus:
             if d in mulus:
                 mulus.remove(d)
 
 
-def main():
-    peizhiwenjian = conf_read()
-    mulu = peizhiwenjian[0][0]
-    guanjianzi = peizhiwenjian[1]
-    guanjianzi_not = peizhiwenjian[2]
-
-    all_file = 0  # 一共有多少符合txt的文件
-    pipeidao_file = 0  # 一共有多少关键字文件
-    # 1:输出匹配上的文件
-    # 2:输出匹配上的文件并合并
-    gongneng = 2
-
-    wenjianlist = is_special_file(mulu)
-    with open("#合并.txt", "wb+") as w1:
-        for wenjian in wenjianlist:
-            all_file += 1
-            if file_OK(wenjian, guanjianzi, guanjianzi_not):
-                if gongneng == 2:
-                    # 判定准备录入的txt在合并txt内是否重复
-                    # 打开匹配上的文件文件
-                    with open(wenjian, "rb") as r:
-                        # 读取内容
-                        neirong = r.read()
-                        w1.seek(0, 0)
-                        if not chongfujiancha(neirong, w1.read()):
-                            w1.seek(0, 2)
-                            pipeidao_file += 1
-                            # 写入标题
-                            w1.write(("第{}章 666 ".format(pipeidao_file) + os.path.splitext(os.path.basename(wenjian))[
-                                0] + "\n\n").encode('gb18030'))
-                            # 内容写入合并TXT
-                            w1.write(neirong)
-                            # 不同文件之间空10行
-                            print("合并文章:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
-                            w1.write(
-                                "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n".encode('gb18030'))
-                        else:
-                            print("重复文件:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
-                            pass
-    print("\n一共{}个文件,匹配到{}个需要文件,{}个重复文件".format(all_file, pipeidao_file, chongfu_count))
-    time.sleep(9999)
+# 传入文件绝对路径和需要多少KB以下，返回是否小于多少KB
+def size_xiaoyu(file):
+    if min_size < os.path.getsize(file) / 1024 < max_size:
+        return True
+    else:
+        return False
 
 
-if __name__ == '__main__':
-    main()
+# 读取配置文件
+peizhiwenjian = conf_read()
+mulu = peizhiwenjian[0][0]
+guanjianzi = peizhiwenjian[1]
+guanjianzi_not = peizhiwenjian[2]
+min_size = int(peizhiwenjian[3][0])
+max_size = int(peizhiwenjian[3][1])
+
+# 数据统计
+all_file = 0  # 一共有多少txt的文件
+pipeidao_file = 0  # 一共有多少关键字文件
+chongfu_count = 0  # 一共有多少重复文件
+
+# 开始
+wenjianlist = is_special_file(mulu, guizes=["*txt"])
+with open("#合并.txt", "wb+") as w1:
+    for wenjian in wenjianlist:
+        all_file += 1
+        if file_OK(wenjian, guanjianzi, guanjianzi_not):
+            # 判定准备录入的txt在合并txt内是否重复
+            # 打开匹配上的文件文件
+            with open(wenjian, "rb") as r:
+                # 读取内容
+                neirong = r.read()
+                w1.seek(0, 0)
+                if not chongfujiancha(neirong, w1.read()):
+                    w1.seek(0, 2)
+                    pipeidao_file += 1
+                    # 写入标题
+                    w1.write(("第{}章 666 ".format(pipeidao_file) + os.path.splitext(os.path.basename(wenjian))[
+                        0] + "\n\n").encode('gb18030'))
+                    # 内容写入合并TXT
+                    w1.write(neirong)
+                    # 不同文件之间空10行
+                    print("合并新文件:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+                    w1.write(
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n".encode('gb18030'))
+                else:
+                    print("重复旧文件:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+print("\n一共{}个文件,匹配到{}个需要文件,{}个重复文件".format(all_file, pipeidao_file, chongfu_count))
+time.sleep(999)
