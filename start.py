@@ -140,11 +140,13 @@ all_file = 0  # 一共有多少txt的文件
 pipeidao_file = 0  # 一共有多少关键字文件
 chongfu_count = 0  # 一共有多少重复文件
 
-# 开始
+# 先找出所有txt文件
 wenjianlist = is_special_file(mulu, guizes=["*txt"])
+# 遍历所有txt文件
 with open("#合并.txt", "wb+") as w1:
     for wenjian in wenjianlist:
         all_file += 1
+        # 判定文件是否符合规则
         if file_OK(wenjian, guanjianzi, guanjianzi_not):
             # 判定准备录入的txt在合并txt内是否重复
             # 打开匹配上的文件文件
