@@ -31,11 +31,10 @@ def conf_read():
 # 传入文件绝对路径，返回迭代器
 def split_file(file):
     try:
-        # with open(file)as f:
         with open(file, encoding="gb18030")as f:
             yield f.read()
-    except:
-        pass
+    except UnicodeDecodeError:
+        print("编码不合规:{}".format(os.path.splitext(os.path.basename(file))[0]))
 
 
 # 传入字符串，正则匹配确认字符串中是否有关键字，有则返回True
@@ -99,20 +98,20 @@ def is_file_math(file, guizes):
 
 # 获取目录及规则，返回生成器，生成器内容为
 # 目录下所有满足规则的文件的绝对路径
-def is_special_file(root, guizes=["*"], liwaimulus=[]):
+def is_special_file(root, guizes=["*.txt"], liwaimulus=[]):
     # 遍历根目录
     for dangqianmulu, mulus, files in os.walk(os.path.abspath(root)):
         # 遍历返回的文件名
         for file in files:
-            # 判定大小是否负责规则
-            if size_xiaoyu(os.path.join(os.path.abspath(dangqianmulu), file)):
+            # 判定大小是否负责
+            if size_fuhe(os.path.join(os.path.abspath(dangqianmulu), file)):
                 # 判定文件名是否满足需要搜索的格式,如果符合则绝对路径放入生成器
                 if is_file_math(file, guizes):
                     yield os.path.join(os.path.abspath(dangqianmulu), file)
                 else:
-                    print("关键字不符:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+                    print("后缀名不符:{}".format(os.path.splitext(os.path.basename(file))[0]))
             else:
-                print("大小不合规:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
+                print("大小不合规:{}".format(os.path.splitext(os.path.basename(file))[0]))
         # 排除指定目录名的目录
         for d in liwaimulus:
             if d in mulus:
@@ -120,11 +119,10 @@ def is_special_file(root, guizes=["*"], liwaimulus=[]):
 
 
 # 传入文件绝对路径和需要多少KB以下，返回是否小于多少KB
-def size_xiaoyu(file):
+def size_fuhe(file):
     if min_size < os.path.getsize(file) / 1024 < max_size:
         return True
-    else:
-        return False
+    return False
 
 
 # 读取配置文件
@@ -169,4 +167,4 @@ with open("#合并.txt", "wb+") as w1:
                 else:
                     print("重复旧文件:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
 print("\n一共{}个文件,匹配到{}个需要文件,{}个重复文件".format(all_file, pipeidao_file, chongfu_count))
-time.sleep(999)
+# time.sleep(999)
