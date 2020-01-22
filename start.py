@@ -5,6 +5,7 @@ import time
 import configparser
 import math
 
+
 # --------------------配置文件-------------------------
 # --------------------配置文件-------------------------
 # --------------------配置文件-------------------------
@@ -60,7 +61,9 @@ def is_special_file(root, guizes=["*.txt"], liwaimulus=[]):
 
 # 传入文件绝对路径和需要多少KB以下，返回是否小于多少KB
 def size_fuhe(file):
-    if min_size < os.path.getsize(file) / 1024 < max_size:
+    filesize = os.path.getsize(file) / 1024
+    # print(filesize)
+    if min_size < filesize < max_size:
         return True
     return False
 
@@ -83,25 +86,25 @@ def is_file_math(file, guizes):
 # 传入文件绝对路径，满足需要规则且不满足排除规则，返回True
 def file_OK(file, guize, guize_not):
     # 文件是否匹配需要的关键字，没匹配上返回Flase
-    if file_pipei(file, guize, ">="):
+    if file_pipei(file, guize, ">=",yuzhi):
         # 如果排除规则里有内容，则需要匹配，全部未匹配上，返回True，匹配上了返回False
         # 如果没内容，则直接返回True
         if guize_not:
             # 排除的关键字
-            if file_pipei(file, guize_not, "<"):
+            if file_pipei(file, guize_not, "<",yuzhi_pingbi):
                 return True
             else:
+                print("存在屏蔽字:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
                 return False
         else:
             return True
     else:
+        print("缺少关键字:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
         return False
 
 
-
-
 # 传入文件绝对路径和需要规则列表，如果大于等于阈值，则返回True
-def file_pipei(file, guize, fuhao):
+def file_pipei(file, guize, fuhao,yuzhi):
     # 满足规则次数
     count_manzu = 0
     # 文件大小
@@ -109,27 +112,27 @@ def file_pipei(file, guize, fuhao):
     # 读取文件对象
     for i in split_file(file):
         # 遍历配置文件选项
-        l=-1
+        l = -1
         for j in guize:
-            l+=1
+            l += 1
             # 计算需要的阈值
-            count_xuyao = math.ceil(filesize / 10 * int(yuzhi[l]))
+            count_xuyao = int(filesize / 50 * int(yuzhi[l]))
+            # print("count_xuyao=",count_xuyao)
             # 配置文件选项内容按逗号分隔，生成列表
             guanjianzilist = j.split(",")
-            count_1 = 0
             # 遍历配置文件选项内容列表
+            count_1 = 0
             for k in range(len(guanjianzilist)):
                 # 计算文件中有多少文件选项内容列表中分词
                 count_1 += guanjianci_count(i, guanjianzilist[k])
-                # print("count_1=",count_1)
+            # print("count_1=",count_1)
             if fuhao == ">=":
-                if count_1 >= count_xuyao:
+                if count_1 > count_xuyao:
                     count_manzu += 1
+            # 屏蔽设置阈值0的，count_xuyao这里算到也是0，所以用<=
             elif fuhao == "<":
-                if count_1 < count_xuyao:
+                if count_1 <= count_xuyao:
                     count_manzu += 1
-
-        # print(count_manzu, len(guize))
         if not count_manzu == len(guize):
             return False
         return True
@@ -158,9 +161,9 @@ def chongfujiancha(file_read, file_write):
     chongfucanshu = 10
     if file_read[500:500 + chongfucanshu] in file_write:
         if file_read[300:300 + chongfucanshu] in file_write:
-            if file_read[400:400 + chongfucanshu] in file_write:
-                chongfu_count += 1
-                return True
+            # if file_read[400:400 + chongfucanshu] in file_write:
+            chongfu_count += 1
+            return True
     return False
 
 
@@ -180,11 +183,11 @@ def split_file(file):
 peizhiwenjian = conf_read()
 mulu = peizhiwenjian[0][0]
 guanjianzi = peizhiwenjian[1]
-yuzhi = peizhiwenjian[4]
 guanjianzi_not = peizhiwenjian[2]
-yuzhi_pingbi = peizhiwenjian[5]
 min_size = int(peizhiwenjian[3][0])
 max_size = int(peizhiwenjian[3][1])
+yuzhi = peizhiwenjian[4]
+yuzhi_pingbi = peizhiwenjian[5]
 
 # 数据统计
 all_file = 0  # 一共有多少txt的文件
@@ -222,4 +225,4 @@ with open("#合并.txt", "wb+") as w1:
                 else:
                     print("重复旧文件:{}".format(os.path.splitext(os.path.basename(wenjian))[0]))
 print("\n一共{}个文件,匹配到{}个需要文件,{}个重复文件".format(all_file, pipeidao_file, chongfu_count))
-time.sleep(0)
+time.sleep(999)
