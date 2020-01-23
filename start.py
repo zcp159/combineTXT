@@ -105,7 +105,7 @@ def file_OK(file, guize, guize_not):
 
 # 传入文件绝对路径和需要规则列表，如果大于等于阈值，则返回True
 def file_pipei(file, guize, fuhao,yuzhi):
-    # 满足规则次数
+    # 满足规则的次数
     count_manzu = 0
     # 文件大小
     filesize = os.path.getsize(file) / 1024
