@@ -126,6 +126,7 @@ def file_pipei(file, guize, fuhao,yuzhi):
                 # 计算文件中有多少文件选项内容列表中分词
                 count_1 += guanjianci_count(i, guanjianzilist[k])
             # print("count_1=",count_1)
+            # 需要的关键词不用很精确，有就行，所以>
             if fuhao == ">=":
                 if count_1 > count_xuyao:
                     count_manzu += 1
